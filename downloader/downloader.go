@@ -44,6 +44,8 @@ type Options struct {
 	Aria2Token  string
 	Aria2Method string
 	Aria2Addr   string
+	UseStream   bool
+	Writer      io.Writer
 }
 
 // Downloader is the default downloader.
@@ -121,6 +123,72 @@ func (downloader *Downloader) writeFile(url string, file *os.File, headers map[s
 		return written, errors.Errorf("file copy error: %s", copyErr)
 	}
 	return written, nil
+}
+
+func (downloader *Downloader) writeStream(url string, w io.Writer, headers map[string]string) (int64, error) {
+	res, err := request.Request(http.MethodGet, url, nil, headers)
+	if err != nil {
+		return 0, err
+	}
+	defer res.Body.Close() // nolint
+
+	barWriter := downloader.bar.NewProxyWriter(w)
+	// Note that io.Copy reads 32kb(maximum) from input and writes them to output, then repeats.
+	// So don't worry about memory.
+	written, copyErr := io.Copy(barWriter, res.Body)
+	if copyErr != nil && copyErr != io.EOF {
+		return written, errors.Errorf("file copy error: %s", copyErr)
+	}
+	return written, nil
+}
+
+func (downloader *Downloader) stream(part *extractors.Part, refer, fileName string) error {
+
+	headers := map[string]string{
+		"Referer": refer,
+	}
+	if downloader.option.ChunkSizeMB > 0 {
+		var start, end, chunkSize int64
+		chunkSize = int64(downloader.option.ChunkSizeMB) * 1024 * 1024
+		remainingSize := part.Size
+		chunk := remainingSize / chunkSize
+		if remainingSize%chunkSize != 0 {
+			chunk++
+		}
+		var i int64 = 1
+		for ; i <= chunk; i++ {
+			end = start + chunkSize - 1
+			headers["Range"] = fmt.Sprintf("bytes=%d-%d", start, end)
+			temp := start
+			for i := 0; ; i++ {
+				written, err := downloader.writeStream(part.URL, downloader.option.Writer, headers)
+				if err == nil {
+					break
+				} else if i+1 >= downloader.option.RetryTimes {
+					return err
+				}
+				temp += written
+				headers["Range"] = fmt.Sprintf("bytes=%d-%d", temp, end)
+				time.Sleep(1 * time.Second)
+			}
+			start = end + 1
+		}
+	} else {
+		temp := int64(0)
+		for i := 0; ; i++ {
+			written, err := downloader.writeStream(part.URL, downloader.option.Writer, headers)
+			if err == nil {
+				break
+			} else if i+1 >= downloader.option.RetryTimes {
+				return err
+			}
+			temp += written
+			headers["Range"] = fmt.Sprintf("bytes=%d-", temp)
+			time.Sleep(1 * time.Second)
+		}
+	}
+
+	return nil
 }
 
 func (downloader *Downloader) save(part *extractors.Part, refer, fileName string) error {
@@ -638,7 +706,11 @@ func (downloader *Downloader) Download(data *extractors.Data) error {
 		if downloader.option.MultiThread {
 			err = downloader.multiThreadSave(stream.Parts[0], data.URL, title)
 		} else {
-			err = downloader.save(stream.Parts[0], data.URL, title)
+			if downloader.option.UseStream {
+				err = downloader.stream(stream.Parts[0], data.URL, title)
+			} else {
+				err = downloader.save(stream.Parts[0], data.URL, title)
+			}
 		}
 
 		if err != nil {
