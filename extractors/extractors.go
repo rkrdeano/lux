@@ -39,7 +39,9 @@ func Extract(u string, option Options) ([]*Data, error) {
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-		if u.Host == "haokan.baidu.com" {
+		if u.Scheme == "lbry" {
+			domain = "odysee"
+		} else if u.Host == "haokan.baidu.com" {
 			domain = "haokan"
 		} else {
 			domain = utils.Domain(u.Host)
