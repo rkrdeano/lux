@@ -111,9 +111,9 @@ func Request(method, url string, body io.Reader, headers map[string]string) (*ht
 		} else if i+1 >= retryTimes {
 			var err error
 			if requestError != nil {
-				err = errors.Errorf("request error: %v", requestError)
+				err = fmt.Errorf("request error: %w", requestError)
 			} else {
-				err = errors.Errorf("%s request error: HTTP %d", url, res.StatusCode)
+				err = errors.Errorf("%s request error: HTTP %s", url, res.Status)
 			}
 			return nil, errors.WithStack(err)
 		}
