@@ -1,6 +1,7 @@
 package kuaishou
 
 import (
+	"context"
 	"net/http"
 	"regexp"
 	"strings"
@@ -25,7 +26,7 @@ func New() extractors.Extractor {
 
 // fetch url and get the cookie that write by server
 func fetchCookies(url string, headers map[string]string) (string, error) {
-	res, err := request.Request(http.MethodGet, url, nil, headers)
+	res, err := request.Request(context.Background(), http.MethodGet, url, nil, headers)
 	if err != nil {
 		return "", err
 	}

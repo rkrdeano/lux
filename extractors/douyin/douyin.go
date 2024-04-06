@@ -1,6 +1,7 @@
 package douyin
 
 import (
+	"context"
 	"crypto/rand"
 	_ "embed"
 	"encoding/json"
@@ -198,7 +199,7 @@ func ttwid() (string, error) {
 		return "", err
 	}
 	payload := strings.NewReader(string(bytes))
-	resp, err := request.Request(http.MethodPost, "https://ttwid.bytedance.com/ttwid/union/register/", payload, nil)
+	resp, err := request.Request(context.Background(), http.MethodPost, "https://ttwid.bytedance.com/ttwid/union/register/", payload, nil)
 	if err != nil {
 		return "", err
 	}

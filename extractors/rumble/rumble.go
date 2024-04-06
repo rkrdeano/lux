@@ -3,6 +3,7 @@ package rumble
 import (
 	"compress/flate"
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -42,7 +43,7 @@ type rumbleData struct {
 
 // Extract is the main function to extract the data.
 func (e *extractor) Extract(url string, option extractors.Options) ([]*extractors.Data, error) {
-	res, err := request.Request(http.MethodGet, url, nil, nil)
+	res, err := request.Request(context.Background(), http.MethodGet, url, nil, nil)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -271,7 +272,7 @@ func (rs *rumbleStreams) makeAllLiveStreams(m map[string]*extractors.Stream) err
 func fetchVideoQuality(videoID string) (map[string]*extractors.Stream, error) {
 	reqURL := fmt.Sprintf(`https://rumble.com/embedJS/u3/?request=video&ver=2&v=%s&ext={"ad_count":null}&ad_wt=0`, videoID)
 
-	res, err := request.Request(http.MethodGet, reqURL, nil, nil)
+	res, err := request.Request(context.Background(), http.MethodGet, reqURL, nil, nil)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

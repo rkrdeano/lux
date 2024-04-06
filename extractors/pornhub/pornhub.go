@@ -3,6 +3,7 @@ package pornhub
 import (
 	"compress/flate"
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -38,7 +39,7 @@ func New() extractors.Extractor {
 
 // Extract is the main function to extract the data.
 func (e *extractor) Extract(url string, option extractors.Options) ([]*extractors.Data, error) {
-	res, err := request.Request(http.MethodGet, url, nil, nil)
+	res, err := request.Request(context.Background(), http.MethodGet, url, nil, nil)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

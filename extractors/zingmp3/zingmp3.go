@@ -1,6 +1,7 @@
 package zingmp3
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/sha512"
@@ -154,7 +155,7 @@ func updatingCookies() error {
 	// But sometime zingmp3 doesn't return cookies. We need to retry get and set cookies again (only allow 5 time)
 	for i := 0; i < 5; i++ {
 		api := generateApi("bai-hat", params{"id": ""})
-		res, err := request.Request(http.MethodGet, api, nil, nil)
+		res, err := request.Request(context.Background(), http.MethodGet, api, nil, nil)
 		if err != nil {
 			return err
 		}

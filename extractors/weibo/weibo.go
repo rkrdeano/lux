@@ -2,6 +2,7 @@ package weibo
 
 import (
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -162,7 +163,7 @@ func downloadWeiboTV(url string) ([]*extractors.Data, error) {
 	oid := utils.MatchOneOf(url, `tv/show/([^?]+)`)[1]
 	postData := "data=" + netURL.QueryEscape("{\"Component_Play_Playinfo\":{\"oid\":\""+oid+"\"}}")
 	payload := strings.NewReader(postData)
-	res, err := request.Request(http.MethodPost, APIURL, payload, headers)
+	res, err := request.Request(context.Background(), http.MethodPost, APIURL, payload, headers)
 
 	if err != nil {
 		return nil, errors.WithStack(err)

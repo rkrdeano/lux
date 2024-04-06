@@ -110,7 +110,7 @@ func (downloader *Downloader) caption(url, fileName, ext string, transform func(
 }
 
 func (downloader *Downloader) writeFile(url string, file *os.File, headers map[string]string) (int64, error) {
-	res, err := request.Request(http.MethodGet, url, nil, headers)
+	res, err := request.Request(context.Background(), http.MethodGet, url, nil, headers)
 	if err != nil {
 		return 0, err
 	}

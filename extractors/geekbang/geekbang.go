@@ -1,6 +1,7 @@
 package geekbang
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -94,7 +95,7 @@ func (e *extractor) Extract(url string, _ extractors.Options) ([]*extractors.Dat
 	// Get video information
 	heanders := map[string]string{"Origin": "https://time.geekbang.org", "Content-Type": "application/json", "Referer": url}
 	params := strings.NewReader(fmt.Sprintf(`{"id": %q}`, matches[2]))
-	res, err := request.Request(http.MethodPost, "https://time.geekbang.org/serv/v1/article", params, heanders)
+	res, err := request.Request(context.Background(), http.MethodPost, "https://time.geekbang.org/serv/v1/article", params, heanders)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -115,7 +116,7 @@ func (e *extractor) Extract(url string, _ extractors.Options) ([]*extractors.Dat
 
 	// Get video license token information
 	params = strings.NewReader("{\"source_type\":1,\"aid\":" + matches[2] + ",\"video_id\":\"" + data.Data.VideoID + "\"}")
-	res, err = request.Request(http.MethodPost, "https://time.geekbang.org/serv/v3/source_auth/video_play_auth", params, heanders)
+	res, err = request.Request(context.Background(), http.MethodPost, "https://time.geekbang.org/serv/v3/source_auth/video_play_auth", params, heanders)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -132,7 +133,7 @@ func (e *extractor) Extract(url string, _ extractors.Options) ([]*extractors.Dat
 
 	// Get video playback information
 	heanders = map[string]string{"Accept-Encoding": ""}
-	res, err = request.Request(http.MethodGet, "http://ali.mantv.top/play/info?playAuth="+playAuth.Data.PlayAuth, nil, heanders)
+	res, err = request.Request(context.Background(), http.MethodGet, "http://ali.mantv.top/play/info?playAuth="+playAuth.Data.PlayAuth, nil, heanders)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
