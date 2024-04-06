@@ -3,6 +3,7 @@ package request
 import (
 	"compress/flate"
 	"compress/gzip"
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -48,7 +49,7 @@ func SetOptions(opt Options) {
 }
 
 // Request base request
-func Request(method, url string, body io.Reader, headers map[string]string) (*http.Response, error) {
+func Request(ctx context.Context, method, url string, body io.Reader, headers map[string]string) (*http.Response, error) {
 	transport := &http.Transport{
 		Proxy:               http.ProxyFromEnvironment,
 		DisableCompression:  true,
@@ -65,7 +66,7 @@ func Request(method, url string, body io.Reader, headers map[string]string) (*ht
 		Jar:       jar,
 	}
 
-	req, err := http.NewRequest(method, url, body)
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

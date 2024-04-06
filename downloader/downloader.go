@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -126,7 +127,7 @@ func (downloader *Downloader) writeFile(url string, file *os.File, headers map[s
 }
 
 func (downloader *Downloader) writeStream(url string, w io.Writer, headers map[string]string) (int64, error) {
-	res, err := request.Request(http.MethodGet, url, nil, headers)
+	res, err := request.Request(context.Background(), http.MethodGet, url, nil, headers)
 	if err != nil {
 		return 0, err
 	}
